@@ -15,7 +15,14 @@ router.get('/house', async (req, res) =>{
 router.get('/house/:code', async (req, res) =>{
     const query = HouseSchema.where({code: req.params.code})
     const house = await query.findOne()
-    res.send(house)
+    if(house){
+        res.status(200).send(house)
+    }else{
+        res.status(404).send({  
+            "status": "failed",
+            "message": "Not Found"
+        })
+    }
     }
 )
 
@@ -35,15 +42,15 @@ router.post('/house', async (req, res) =>{
     })
 
     house.save()
-        .then((result) => {res.send(result)})
+        .then((result) => {res.status(201).send(result)})
         .catch((err) => {
             if(err.code == 11000){
-                res.send({  
+                res.status(409).send({  
                     "status": "failed",
                     "message": "El codigo ya ha sido registrado"
                 })
             }else{
-                res.send({  
+                res.status(400).send({  
                     "status": "failed",
                     "message": "Error almacenando la informacion" + err,
                 })
@@ -102,46 +109,44 @@ router.patch('/house/:code', async (req, res) =>{
     const query = HouseSchema.where({code: req.params.code})
     const house = await query.findOne()
 
-    let updateHouse = HouseSchema({
-        _id: house._id,
-        address: req.body.address,
-        city: req.body.city,
-        state: req.body.state,
-        size: req.body.size,
-        type: req.body.type,
-        zip_code: req.body.zip_code,
-        rooms: req.body.rooms,
-        bathrooms: req.body.bathrooms,
-        parking: req.body.parking,
-        price: req.body.price,
-    })
-    HouseSchema.findOneAndUpdate(house, updateHouse, {new: true}).then((result) =>{
-        res.send(result)
-    }).catch((err)=>{
-        console.log(err)
-        res.send("Error actualizando el registro")
-    })
-    }
+    if(house){
+        let updateHouse = HouseSchema({
+            _id: house._id,
+            address: req.body.address,
+            city: req.body.city,
+            state: req.body.state,
+            size: req.body.size,
+            type: req.body.type,
+            zip_code: req.body.zip_code,
+            rooms: req.body.rooms,
+            bathrooms: req.body.bathrooms,
+            parking: req.body.parking,
+            price: req.body.price,
+        })
+        HouseSchema.findOneAndUpdate(house, updateHouse, {new: true}).then((result) =>{
+            res.status(200).send(result)
+        })
+    }else{
+        res.status(500).send("Error actualizando el registro, casa no encontrada")
+    }}
 )
 
 router.delete('/house/:code', async (req, res) =>{
 
     const code = req.params.code
-
-    await HouseSchema.deleteOne({code: code}).then(() => {
-        res.json({
-            "status": "success",
-            "message": "User deleted successfully"
-        })
-    }).catch((err) => {
-        console.log(err)
-        res.json({  
-            "status": "failed",
-            "message": "Error deleting user"
-        })
-    })
+    const {deletedCount} = await HouseSchema.deleteOne({code: code})
+    if (deletedCount === 0) {
+        return res.status(500).json({
+                    "status": "failed",
+                    "message": "Error deleting house"
+                })
     }
-)
+    return res.status(200).json({
+        "status": "success",
+        "message": "House deleted successfully"
+    })
+})
+
 
 
 module.exports = router

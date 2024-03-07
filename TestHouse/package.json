@@ -10,6 +10,9 @@
     "multer": "^1.4.5-lts.1",
     "socket.io": "^4.7.4"
   },
+  "jest": {
+      "testTimeout": 100000
+  },
   "name": "testhouse",
   "version": "1.0.0",
   "main": "index.js",

@@ -35,7 +35,7 @@ describe('POST /house', () => {
          *  para ser usanda en las otras pruebas */
         houseCode = response.body.code;
 
-        expect(response.statusCode).toBe(200)
+        expect(response.statusCode).toBe(201)
         expect(response.body).toHaveProperty('_id')
 
         expect(response.body.address).toBe(objectToTest.address)
@@ -49,6 +49,50 @@ describe('POST /house', () => {
         expect(response.body.parking).toBe(objectToTest.parking)
         expect(response.body.price).toBe(objectToTest.price)
         expect(response.body.code).toBe(objectToTest.code)
+    })
+    it('The data is incorrect', async () => {
+        const badObjectToTest = {
+            "address": "Calle 0 # 00 - 00",
+            "city": "Girardott",
+            "state": "CCundinamarca",
+            "size": 99,
+            "type": "apartment",
+            "zip_code": "999999",
+            "rooms": 9,
+            "bathrooms": 9,
+            "parking": true,
+            "price": 999999999,
+            "code": "AAA19999",
+            }
+
+        const response = await request(app).post('/house').send(badObjectToTest)
+
+        expect(response.statusCode).toBe(400)
+        expect(response.body).not.toHaveProperty('_id')
+        expect(response.body.status).toBe("failed")
+
+    })
+
+    it('The data already exists', async () => {
+        const existsObjectToTest = {
+            "address": "Calle 0 # 00 - 00",
+            "city": "Girardot",
+            "state": "Cundinamarca",
+            "size": 99,
+            "type": "apartment",
+            "zip_code": "999999",
+            "rooms": 9,
+            "bathrooms": 9,
+            "parking": true,
+            "price": 999999999,
+            "code": "AAAA9999",
+            }
+
+        const response = await request(app).post('/house').send(existsObjectToTest)
+
+        expect(response.statusCode).toBe(409)
+        expect(response.body).not.toHaveProperty('_id')
+        expect(response.body.status).toBe("failed")
     })
 })
 
@@ -72,6 +116,17 @@ describe('GET /house/:code', () => {
         expect(response.body.price).toBe(objectToTest.price)
         expect(response.body.code).toBe(objectToTest.code)
     })
+
+    it('A house that does not exist', async () => {
+        
+        const response = await request(app).get('/house/1111ZZZZ');   
+
+        expect(response.status).toBe(404);
+        expect(response.body).not.toHaveProperty('_id')
+        expect(response.text).toContain("Not Found");        
+
+    })
+
 })
 
 describe('PATCH /house/:code', () => {
@@ -96,13 +151,34 @@ describe('PATCH /house/:code', () => {
         expect(response.body.price).toBe(objectToTest.price)
         expect(response.body.code).toBe(objectToTest.code)
     })
+
+    it('update house in the DB is failed', async () => {
+        const response = await request(app)
+                                .patch('/house/1111ZZZZ')
+                                .send(objectToTest)
+        
+        expect(response.status).toBe(500)
+        expect(response.text).toContain("Error actualizando el registro, casa no encontrada")
+
+    })
+
 })
 
 describe('POST /delete', () => {
     it('Success delete with code', async () => {        
-        const response = await request(app).delete('/house/'+ houseCode)
+        const response = await request(app).delete('/house/AAAA9999')
 
         expect(response.statusCode).toBe(200)
         expect(response.body.status).toBe("success")
+    })
+
+
+    it('Failed delete with code', async () => {
+        
+        const response = await request(app).delete('/house/1111ZZZZ');   
+
+        expect(response.status).toBe(500);
+        expect(response.body.status).toBe("failed")   
+
     })
 })

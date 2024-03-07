@@ -166,7 +166,7 @@ describe('PATCH /house/:code', () => {
 
 describe('POST /delete', () => {
     it('Success delete with code', async () => {        
-        const response = await request(app).delete('/house/AAAA9999')
+        const response = await request(app).delete('/house/'+ houseCode)
 
         expect(response.statusCode).toBe(200)
         expect(response.body.status).toBe("success")

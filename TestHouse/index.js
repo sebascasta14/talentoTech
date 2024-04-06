@@ -3,6 +3,9 @@ const app = express()
 const router = express.Router()
 require('dotenv').config()
 
+const cors = require('cors')
+app.use(cors())
+
 const socket = require('socket.io')
 const http = require('http').Server(app)
 const io = socket(http)
@@ -11,8 +14,8 @@ const { createYoga } = require('graphql-yoga');
 const schema = require('./graphql/schema');
 
 
-const DB_URL = process.env.DB_URL || ""
-const port = process.env.PORT || 3001
+const DB_URL = process.env.DB_URL ?? ""
+const PORT = process.env.PORT ?? 3001
 
 const moongose = require('mongoose')
 moongose.connect(DB_URL)
@@ -64,8 +67,8 @@ app.use('/', houseRoutes)
 app.use('/', messageRoutes)
 
 
-http.listen(port,() =>{
-    console.log(port)
+http.listen(PORT,() =>{
+    console.log(PORT)
 })
 
 module.exports = http
